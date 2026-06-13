@@ -1,25 +1,70 @@
+import os
+import sys
+
+# ==========================================
+# 🛠️ [인프라 보완] 가상 서버 환경 내 미설치 부품 강제 자동 조립 스크립트
+# ==========================================
+def install_and_import(package, import_name=None):
+    if import_name is None:
+        import_name = package
+    try:
+        __import__(import_name)
+    except ImportError:
+        import subprocess
+        subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+
+# 가상 서버 구동에 필요한 핵심 외부 부품 일괄 강제 주입
+install_and_import("FinanceDataReader")
+install_and_import("pandas")
+install_and_import("beautifulsoup4", "bs4")
+install_and_import("requests")
+install_and_import("yfinance")
+
 import streamlit as st
 import FinanceDataReader as fdr
 import pandas as pd
 from datetime import datetime, timedelta
 import requests
 from bs4 import BeautifulSoup
-
-try:
-    import yfinance as yf
-except ImportError:
-    import os
-    os.system('python -m pip install yfinance')
-    import yfinance as yf
+import yfinance as yf
 
 # 대시보드 화면 웹 브라우저 전체 너비 확장
 st.set_page_config(layout="wide", page_title="나만의 주식 비서")
 
-st.title("📊 나만의 주식 비서 자동화 대시보드 (국장 50 / 미장 50 완결 모드)")
+# ==========================================
+# 🔒 [보안 시스템] 나만의 비밀번호 설정 구역
+# ==========================================
+# 요청하신 숫자로 마스터 암호키를 완벽하게 개정했습니다.
+MASTER_PASSWORD = "231002" 
+
+st.title("🔒 나만의 주식 비서 보안 로그인")
+
+# 세션 상태 초기화 (로그인 여부 기억 부품)
+if "logged_in" not in st.session_state:
+    st.session_state["logged_in"] = False
+
+# 로그인 창 띄우기
+if not st.session_state["logged_in"]:
+    input_pw = st.text_input("출입 비밀번호를 입력하고 엔터를 누르세요:", type="password")
+    
+    if input_pw:
+        if input_pw == MASTER_PASSWORD:
+            st.session_state["logged_in"] = True
+            st.success("🔓 인증 성공! 대시보드를 가동합니다.")
+            st.rerun()
+        else:
+            st.error("❌ 비밀번호가 불일치합니다. 접근이 거부되었습니다.")
+            st.stop()
+    else:
+        st.stop()  # 비밀번호 입력 전에는 아래 주식 코드가 아예 실행 안 되도록 물리적 차단
+
+# ==========================================
+# 📈 로그인 성공 시에만 열리는 금융 시스템 구역
+# ==========================================
+st.write("👋 안녕하세요! 실시간 주식 모니터링 시스템입니다.")
 st.markdown("---")
 
 def get_live_financial_indicators(ticker_code):
-    """국내 주식 실시간 PER/PBR/ROE 크롤링 엔진"""
     url = "https://finance.naver.com/item/main.naver?code=" + str(ticker_code)
     try:
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
@@ -45,7 +90,6 @@ def get_live_financial_indicators(ticker_code):
 
 @st.cache_data
 def get_robust_market_data():
-    """국내 주식 거래량 상위 50개 데이터 수집"""
     current_date = datetime.now()
     if current_date.weekday() == 5:
         current_date -= timedelta(days=1)
@@ -89,7 +133,6 @@ def get_robust_market_data():
 
 @st.cache_data
 def get_us_market_data_50_safe():
-    """야후 서버 차단 및 복사 오타를 완벽 우회하는 완전 안전판 엔진"""
     us_name_map = {
         'MSFT': '마이크로소프트', 'AAPL': '애플', 'NVDA': '엔비디아', 'AMZN': '아마존', 'META': '메타', 
         'GOOGL': '알파벳(구글)', 'AVGO': '브로드컴', 'TSLA': '테슬라', 'JPM': 'JP모건체이스', 'UNH': '유나이티드헬스', 
@@ -98,7 +141,7 @@ def get_us_market_data_50_safe():
         'CVX': '쉐브론', 'CRM': '세일즈포스', 'ADBE': '어도비', 'WMT': '월마트', 'BAC': '뱅크오브아메리카', 
         'ACN': '액센츄어', 'PEP': '펩시코', 'LIN': '린데', 'KO': '코카콜라', 'ORCL': '오라클', 
         'TMO': '써모피셔', 'CSCO': '시스코', 'INTC': '인텔', 'DIS': '디즈니', 'QCOM': '퀄컴', 
-        'TXN': '텍사스인스트루먼트', 'DHR': '다나허', 'VZ': '버라이즌', 'NFLX': '넷플릭스', 'CMCSA': '컴캐스트', 
+        'TXN': '텍사스인스트루먼트', 'DHR': '다나허', 'VZ': '버라이즌', 'NFLX': '넷픽스', 'CMCSA': '컴캐스트', 
         'NKE': '나이키', 'HON': '하네웰', 'AMGN': '암젠', 'LOW': '로우스', 'SPGI': 'S&P글로벌', 
         'IBM': 'IBM', 'AXP': '아메리칸익스프레스', 'GE': '제너럴일렉트릭'
     }
@@ -119,7 +162,6 @@ def get_us_market_data_50_safe():
                 if close_p == 0:
                     close_p = info.get('previousClose', 0)
                 
-                # [완벽 보정] 오타 유발 요인인 f-string과 조건문을 완전 철거하고 기본 연산 구조로 개편
                 if close_p > 0:
                     price_text = "$" + str(round(close_p, 2))
                 else:
@@ -153,14 +195,12 @@ def get_us_market_data_50_safe():
         
     return pd.DataFrame(us_data)
 
-# 데이터 마운트
 df_stocks, base_date = get_robust_market_data()
 df_us_stocks = get_us_market_data_50_safe()
 
 st.caption("최신 데이터 기준일: " + str(base_date))
 st.markdown("---")
 
-# 대시보드 화면 가로 분할 시각화
 col1, col2 = st.columns(2)
 
 with col1:
