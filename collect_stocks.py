@@ -1,25 +1,3 @@
-import os
-import sys
-
-# ==========================================
-# 🛠️ [인프라 보완] 가상 서버 환경 내 미설치 부품 강제 자동 조립 스크립트
-# ==========================================
-def install_and_import(package, import_name=None):
-    if import_name is None:
-        import_name = package
-    try:
-        __import__(import_name)
-    except ImportError:
-        import subprocess
-        subprocess.check_call([sys.executable, "-m", "pip", "install", package])
-
-# 가상 서버 구동에 필요한 핵심 외부 부품 일괄 강제 주입
-install_and_import("FinanceDataReader")
-install_and_import("pandas")
-install_and_import("beautifulsoup4", "bs4")
-install_and_import("requests")
-install_and_import("yfinance")
-
 import streamlit as st
 import FinanceDataReader as fdr
 import pandas as pd
@@ -34,7 +12,6 @@ st.set_page_config(layout="wide", page_title="나만의 주식 비서")
 # ==========================================
 # 🔒 [보안 시스템] 나만의 비밀번호 설정 구역
 # ==========================================
-# 요청하신 숫자로 마스터 암호키를 완벽하게 개정했습니다.
 MASTER_PASSWORD = "231002" 
 
 st.title("🔒 나만의 주식 비서 보안 로그인")
@@ -141,7 +118,7 @@ def get_us_market_data_50_safe():
         'CVX': '쉐브론', 'CRM': '세일즈포스', 'ADBE': '어도비', 'WMT': '월마트', 'BAC': '뱅크오브아메리카', 
         'ACN': '액센츄어', 'PEP': '펩시코', 'LIN': '린데', 'KO': '코카콜라', 'ORCL': '오라클', 
         'TMO': '써모피셔', 'CSCO': '시스코', 'INTC': '인텔', 'DIS': '디즈니', 'QCOM': '퀄컴', 
-        'TXN': '텍사스인스트루먼트', 'DHR': '다나허', 'VZ': '버라이즌', 'NFLX': '넷픽스', 'CMCSA': '컴캐스트', 
+        'TXN': '텍사스인스트루먼트', 'DHR': '다나허', 'VZ': '버라이즌', 'NFLX': '넷플릭스', 'CMCSA': '컴캐스트', 
         'NKE': '나이키', 'HON': '하네웰', 'AMGN': '암젠', 'LOW': '로우스', 'SPGI': 'S&P글로벌', 
         'IBM': 'IBM', 'AXP': '아메리칸익스프레스', 'GE': '제너럴일렉트릭'
     }
